@@ -10,23 +10,24 @@ return function () {
 	var $items = [];
 	var $nav_items = [];
 	var item_count = 0;
-	var $bg_container = null;
+	var datas = {};
 
-	var init = function(el, options){
+	var init = function(el){
 		$container = $(el);
-		$items = $container.find('.js-slideitem');
+		$items = $container.find(options.itemsSelector);
 		item_count = $items.size();
-		$nav_items = $container.find('.js-slideitemnav').bind('click', slidenavclicked);
-		$container.find('.js-slidearrow').bind('click', slidearrowclicked);
+		$nav_items = $container.find(options.navsSelector).bind('click', slidenavclicked);
+		$container.find(options.arrowsSelector).bind('click', slidearrowclicked);
 		
+		options.oninit.call(null, $container, el, options, $items, datas, showItem, decalItem);
 	};
 
 	var slidenavclicked = function(ev){
-		if ( $container.hasClass('cantanim') ) {
+		if ( $container.hasClass(options.cantAnimClass) ) {
 			return;
 		}
 		var $el = $(ev.currentTarget);
-		var data_nb = $el.attr('data-nb');
+		var data_nb = $el.attr(options.itemNbAttr);
 		prev_item = cur_item;
 		cur_item = $el.index() % item_count;
 		if ( cur_item != prev_item ) {
@@ -35,11 +36,15 @@ return function () {
 	};
 
 	var slidearrowclicked = function(ev){
-		if ( $container.hasClass('cantanim') ) {
+		var $el = $(ev.currentTarget);
+		var way = ($el.hasClass(options.arrowLeftClass)) ? -1 : 1;
+		decalItem(way);
+	};
+
+	var decalItem = function(way){
+		if ( $container.hasClass(options.cantAnimClass) ) {
 			return;
 		}
-		var $el = $(ev.currentTarget);
-		var way = ($el.hasClass('js-slidearrow--left')) ? -1 : 1;
 		prev_item = cur_item;
 		cur_item += way;
 		if ( cur_item < 0 ) {
@@ -52,23 +57,18 @@ return function () {
 	};
 
 	var showItem = function(){
-		$container.addClass('cantanim');
+		$container.addClass(options.cantAnimClass);
 		
 		// callback qui permet de gerer la transition
-		options.onshowitem.call(null, $container, prev_item, cur_item, $items);
+		options.onshowitem.call(null, $container, prev_item, cur_item, $items, datas);
 
 		refreshNavItems();
-		
 	};
 
 	var refreshNavItems = function(){
-
-		$nav_items.removeClass('isselected');
-		$($nav_items.get(cur_item)).addClass('isselected');
-		
+		$nav_items.removeClass(options.navsClassSelected);
+		$($nav_items.get(cur_item)).addClass(options.navsClassSelected);
 	};
-
-	
 
 	return {
 		'init' : init
@@ -78,6 +78,14 @@ return function () {
 }
 
 var lightSliderFactory_DEFAULTS = {
+	'itemsSelector' : '.js-slideitem',
+	'navsSelector' : '.js-slideitemnav',
+	'arrowsSelector' : '.js-slidearrow',
+	'arrowLeftClass' : 'js-slidearrow--left',
+	'cantAnimClass' : 'cantanim',
+	'itemNbAttr' : 'data-nb',
+	'navsClassSelected' : 'isselected',
+	'oninit' : function(){},
 	'onshowitem' : function(){}
 };
 
@@ -90,7 +98,7 @@ $.fn.lightSlider = function (option) {
 
 		if (!data) {
 			data = lightSliderFactory(options);
-			data.init(this, options);
+			data.init(this);
 			$this.data("cyma.lightSlider", data);
 		}
 		if (typeof option === "string") data[option]();
