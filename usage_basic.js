@@ -14,7 +14,7 @@
 					}
 				});
 			},
-			'onshowitem' : function($container, prev_item, cur_item, $items, datas){
+			'onshowitem' : function($container, prev_item, cur_item, options, $items, datas){
 				$($items.get(prev_item)).animate({'margin-left':'100%'}, 700, function(){
 					$(this).css('display','none');
 				});
@@ -22,10 +22,10 @@
 					
 				});
 
-				$container.removeClass('cantanim');
+				$container.removeClass(options.cantAnimClass);
 			}
 		});
-		
+
 	} );
 
 } )( jQuery );
