@@ -18,7 +18,17 @@ return function () {
 		item_count = $items.size();
 		$nav_items = $container.find(options.navsSelector).bind('click', slidenavclicked);
 		$container.find(options.arrowsSelector).bind('click', slidearrowclicked);
-		
+		if ( options.useTouchEvents && $.fn.swipe ) {
+			$container.swipe({
+				swipeLeft:function(event, direction, distance, duration, fingerCount) {
+					decalItem(1);
+				},
+				swipeRight:function(event, direction, distance, duration, fingerCount) {
+					decalItem(-1);
+				}
+			});
+		}
+
 		options.oninit.call(null, $container, el, options, $items, datas, showItem, decalItem);
 	};
 
@@ -85,6 +95,7 @@ var lightSliderFactory_DEFAULTS = {
 	'cantAnimClass' : 'cantanim',
 	'itemNbAttr' : 'data-nb',
 	'navsClassSelected' : 'isselected',
+	'useTouchEvents' : true,
 	'oninit' : function(){},
 	'onshowitem' : function(){}
 };
