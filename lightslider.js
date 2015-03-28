@@ -11,6 +11,9 @@ return function () {
 	var $nav_items = [];
 	var item_count = 0;
 	var datas = {};
+	var auto_play = options.autoPlay;
+	var auto_play_timer = 0;
+	var navs_clicked = false;
 
 	var init = function(el){
 		$container = $(el);
@@ -18,11 +21,48 @@ return function () {
 		item_count = $items.size();
 		$nav_items = $container.find(options.navsSelector).bind('click', slidenavclicked);
 		$container.find(options.arrowsSelector).bind('click', slidearrowclicked);
-		
+		if ( options.useTouchEvents && $.fn.swipe ) {
+			$container.swipe({
+				swipeLeft:function(event, direction, distance, duration, fingerCount) {
+					navs_clicked = true;
+					stopAutoPlay();
+					decalItem(1);
+				},
+				swipeRight:function(event, direction, distance, duration, fingerCount) {
+					navs_clicked = true;
+					stopAutoPlay();
+					decalItem(-1);
+				}
+			});
+		}
+
 		options.oninit.call(null, $container, el, options, $items, datas, showItem, decalItem);
+		if ( auto_play ) {
+			$container.hover(function(){
+				navs_clicked = false;
+				stopAutoPlay();
+			}, function(){
+				if ( options.autoPlayForceRestart || navs_clicked === false ) {
+					startAutoPlay();
+				}
+			});
+			startAutoPlay();
+		}
+	};
+
+	var startAutoPlay = function(){
+		auto_play_timer = setInterval(function() {
+			decalItem(1);
+		}, options.autoPlayDelay);
+	};
+
+	var stopAutoPlay = function(){
+		clearTimeout(auto_play_timer);
 	};
 
 	var slidenavclicked = function(ev){
+		navs_clicked = true;
+		stopAutoPlay();
 		if ( $container.hasClass(options.cantAnimClass) ) {
 			return;
 		}
@@ -36,6 +76,8 @@ return function () {
 	};
 
 	var slidearrowclicked = function(ev){
+		navs_clicked = true;
+		stopAutoPlay();
 		var $el = $(ev.currentTarget);
 		var way = ($el.hasClass(options.arrowLeftClass)) ? -1 : 1;
 		decalItem(way);
@@ -60,7 +102,7 @@ return function () {
 		$container.addClass(options.cantAnimClass);
 		
 		// callback qui permet de gerer la transition
-		options.onshowitem.call(null, $container, prev_item, cur_item, $items, datas);
+		options.onshowitem.call(null, $container, prev_item, cur_item, options, $items, datas);
 
 		refreshNavItems();
 	};
@@ -72,7 +114,7 @@ return function () {
 
 	return {
 		'init' : init
-	}
+	};
 
 }();
 }
@@ -85,6 +127,10 @@ var lightSliderFactory_DEFAULTS = {
 	'cantAnimClass' : 'cantanim',
 	'itemNbAttr' : 'data-nb',
 	'navsClassSelected' : 'isselected',
+	'useTouchEvents' : true,
+	'autoPlay' : true,
+	'autoPlayForceRestart' : false,
+	'autoPlayDelay' : 2000,
 	'oninit' : function(){},
 	'onshowitem' : function(){}
 };
