@@ -70,7 +70,7 @@ return function () {
 		$container.addClass(options.cantAnimClass);
 		
 		// callback qui permet de gerer la transition
-		options.onshowitem.call(null, $container, prev_item, cur_item, $items, datas);
+		options.onshowitem.call(null, $container, prev_item, cur_item, options, $items, datas);
 
 		refreshNavItems();
 	};
