@@ -19,8 +19,8 @@ return function () {
 		$container = $(el);
 		$items = $container.find(options.itemsSelector);
 		item_count = $items.size();
-		$nav_items = $container.find(options.navsSelector).bind('click', slidenavclicked);
-		$container.find(options.arrowsSelector).bind('click', slidearrowclicked);
+		$nav_items = $container.find(options.navsSelector).bind('click', slideNavClicked);
+		$container.find(options.arrowsSelector).bind('click', slideArrowClicked);
 		if ( options.useTouchEvents && $.fn.swipe ) {
 			$container.swipe({
 				swipeLeft:function(event, direction, distance, duration, fingerCount) {
@@ -36,7 +36,7 @@ return function () {
 			});
 		}
 
-		options.oninit.call(null, $container, el, options, $items, datas, showItem, decalItem);
+		options.oninit && options.oninit.call(null, $container, el, options, $items, datas, showItem, decalItem);
 		if ( auto_play ) {
 			$container.hover(function(){
 				navs_clicked = false;
@@ -60,7 +60,7 @@ return function () {
 		clearTimeout(auto_play_timer);
 	};
 
-	var slidenavclicked = function(ev){
+	var slideNavClicked = function(ev){
 		navs_clicked = true;
 		stopAutoPlay();
 		if ( $container.hasClass(options.cantAnimClass) ) {
@@ -68,6 +68,7 @@ return function () {
 		}
 		var $el = $(ev.currentTarget);
 		var data_nb = $el.attr(options.itemNbAttr);
+		var data_nb = $el.index();
 		prev_item = cur_item;
 		cur_item = $el.index() % item_count;
 		if ( cur_item != prev_item ) {
@@ -75,7 +76,7 @@ return function () {
 		}
 	};
 
-	var slidearrowclicked = function(ev){
+	var slideArrowClicked = function(ev){
 		navs_clicked = true;
 		stopAutoPlay();
 		var $el = $(ev.currentTarget);
@@ -98,6 +99,15 @@ return function () {
 		showItem();
 	};
 
+	var setItem = function(nb){
+		if ( $container.hasClass(options.cantAnimClass) ) {
+			return;
+		}
+		prev_item = cur_item;
+		cur_item = nb;
+		showItem();
+	};
+
 	var showItem = function(){
 		$container.addClass(options.cantAnimClass);
 		
@@ -108,16 +118,17 @@ return function () {
 	};
 
 	var refreshNavItems = function(){
-		$nav_items.removeClass(options.navsClassSelected);
-		$($nav_items.get(cur_item)).addClass(options.navsClassSelected);
+		$nav_items.removeClass(options.navsClassSelected)
+			.eq(cur_item).addClass(options.navsClassSelected);
 	};
 
 	return {
-		'init' : init
+		'init' : init,
+		'setItem' : setItem
 	};
 
 }();
-}
+};
 
 var lightSliderFactory_DEFAULTS = {
 	'itemsSelector' : '.js-slideitem',
@@ -128,9 +139,9 @@ var lightSliderFactory_DEFAULTS = {
 	'itemNbAttr' : 'data-nb',
 	'navsClassSelected' : 'isselected',
 	'useTouchEvents' : true,
-	'autoPlay' : true,
+	'autoPlay' : false,
 	'autoPlayForceRestart' : false,
-	'autoPlayDelay' : 2000,
+	'autoPlayDelay' : 5000,
 	'oninit' : function(){},
 	'onshowitem' : function(){}
 };
@@ -147,7 +158,10 @@ $.fn.lightSlider = function (option) {
 			data.init(this);
 			$this.data("cyma.lightSlider", data);
 		}
-		if (typeof option === "string") data[option]();
+		if (typeof option === "string") {
+			console.log(option);
+			data[option]();
+		}
 	});
 };
 
